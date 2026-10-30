@@ -47,7 +47,7 @@ Each output directory includes the scaler, config, manifest, validation-selected
 The implementation's automated checks are:
 
 ```powershell
-$env:PYTHONPATH="src"
+$env:PYTHONPATH="backend/src"
 python -m pytest -q
 ```
 
@@ -56,7 +56,7 @@ For a quick training and API smoke check, train one epoch into a disposable bund
 ```powershell
 python -m predictive_maintenance.train --epochs 1 --output models/smoke
 $env:MODEL_DIR="models/smoke"
-uvicorn predictive_maintenance.api:app --app-dir src --reload
+uvicorn predictive_maintenance.api:app --app-dir backend/src --reload
 ```
 
 Use the default 30-epoch training command for the research run. The one-epoch bundle is only for checking the code path.
@@ -66,17 +66,18 @@ Use the default 30-epoch training command for the research run. The one-epoch bu
 ## Run API and mock CRM
 
 ```powershell
-$env:MODEL_DIR="models"
-uvicorn predictive_maintenance.api:app --app-dir src --reload
+$env:MODEL_DIR="models/demo"
+uvicorn predictive_maintenance.api:app --app-dir backend/src --reload
 ```
 
-Open `http://127.0.0.1:8000/docs`. Endpoints: `GET /health`, `POST /predict`, `GET /alerts`, `GET /alerts/{alert_id}`, and `PATCH /alerts/{alert_id}/status`. Set `MOCK_CRM_DB` to choose the SQLite path. The `/predict` request contains one device and its recent telemetry; alert creation can be disabled with `create_alert: false`.
+Open `http://127.0.0.1:8000/` for the dashboard or `/docs` for API documentation. Upload a CSV or XLSX file, choose the sheet and device, and run a prediction. Required columns are `device_id`, `timestamp`, `error_rate`, `latency_ms`, `temperature_c`, and `traffic_load`; rows must be in timestamp order at five-minute intervals. The dashboard shows the history requirement for the loaded model. Set `MOCK_CRM_DB` to choose the SQLite path. The service also exposes `/workbook/preview`, `/workbook/predict`, and `/model-info` alongside the prediction and alert endpoints.
 
 ## Layout
 
 ```text
 config/default.yaml
-src/predictive_maintenance/{schema,features,windows,simulator,metrics,train,inference,alerts,store,api}.py
+frontend/              # dashboard HTML, CSS and JavaScript
+backend/src/predictive_maintenance/  # Python API, data pipeline and models
 data/raw/              # local, ignored
 models/                # local model bundles, ignored
 ```
